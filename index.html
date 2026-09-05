@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Team - Live Google Sheets Portal</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --badge-bg: #eff6ff;
+      --badge-text: #1d4ed8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding-bottom: 60px; }
+    .container { max-width: 1250px; margin: 0 auto; padding: 25px 20px; }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: #fff;
+      padding: 30px 24px;
+      border-radius: 18px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .header-left h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .header-left p { opacity: 0.9; font-size: 14px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.2); padding: 8px 16px;
+      border-radius: 30px; font-size: 13px; font-weight: 600;
+      backdrop-filter: blur(5px);
+    }
+    .pulse-dot {
+      width: 9px; height: 9px; background: #4ade80; border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+    .btn-sync {
+      background: #ffffff; color: var(--primary); border: none;
+      padding: 8px 14px; border-radius: 9px; font-weight: 600; font-size: 13px;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-sync:hover { background: #f1f5f9; transform: translateY(-1px); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .stat-icon.blue { background: #eff6ff; color: #2563eb; }
+    .stat-icon.purple { background: #f5f3ff; color: #7c3aed; }
+    .stat-icon.green { background: #f0fdf4; color: #16a34a; }
+    .stat-icon.orange { background: #fff7ed; color: #ea580c; }
+    .stat-info h3 { font-size: 22px; font-weight: 700; color: var(--text-main); }
+    .stat-info span { font-size: 13px; color: var(--text-muted); }
+
+    /* Controls Bar */
+    .controls {
+      background: var(--card-bg);
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+    .search-wrapper { position: relative; flex: 1; min-width: 250px; }
+    .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .search-input {
+      width: 100%; padding: 11px 16px 11px 40px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--primary); }
+
+    .filter-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 9px 14px; border-radius: 9px; border: 1px solid var(--border);
+      background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+    .view-toggle { display: flex; background: #f1f5f9; padding: 3px; border-radius: 9px; gap: 4px; }
+    .view-btn {
+      border: none; background: transparent; padding: 7px 12px;
+      border-radius: 7px; cursor: pointer; color: #64748b; font-size: 14px;
+    }
+    .view-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* Loading & Status Indicator */
+    .status-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 16px; background: #eff6ff; border-radius: 8px;
+      color: #1e40af; font-size: 12px; font-weight: 500; margin-bottom: 20px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+    .candidate-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .candidate-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px -5px rgba(0,0,0,0.06);
+    }
+    .card-top { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 15px; }
+    .avatar {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px; flex-shrink: 0;
+    }
+    .candidate-title h3 { font-size: 17px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+    .sub-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .sub-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .card-body { margin-bottom: 18px; display: flex; flex-direction: column; gap: 9px; font-size: 13px; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; }
+    .info-label { color: var(--text-muted); }
+    .info-value { font-weight: 500; color: var(--text-main); text-align: right; }
+
+    .skills-box {
+      background: #f8fafc; border-radius: 10px; padding: 10px;
+      margin-top: 6px; border: 1px dashed var(--border);
+    }
+    .skills-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; display: block; }
+    .skill-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
+      background: #eff6ff; color: #1d4ed8; padding: 3px 8px;
+      border-radius: 6px; font-size: 11px; font-weight: 500;
+    }
+    .chip.none { background: #f1f5f9; color: #64748b; }
+
+    .card-footer {
+      display: flex; gap: 10px; border-top: 1px solid var(--border);
+      padding-top: 15px; margin-top: auto;
+    }
+    .btn-wa {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: #22c55e; color: #fff; text-decoration: none; padding: 10px;
+      border-radius: 9px; font-size: 13px; font-weight: 600; transition: background 0.2s;
+    }
+    .btn-wa:hover { background: #16a34a; }
+    .btn-call {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 42px; height: 40px; border-radius: 9px; border: 1px solid var(--border);
+      color: var(--text-main); text-decoration: none; transition: background 0.2s;
+    }
+    .btn-call:hover { background: #f1f5f9; }
+
+    /* Table View */
+    .table-wrapper {
+      background: var(--card-bg); border-radius: 16px;
+      border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      background: #f8fafc; padding: 14px 18px; font-size: 13px;
+      font-weight: 600; color: #475569; border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 13px 18px; font-size: 13px; border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #fbfcfe; }
+    .badge-work {
+      display: inline-block; background: #ecfdf5; color: #047857;
+      padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;
+    }
+
+    /* Loader Animation */
+    .loader-box { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid #cbd5e1; border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <h1>My Team Candidates Portal</h1>
+      <p>Live synchronized candidate directory connected directly to Google Sheets</p>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="pulse-dot"></div>
+        <span id="syncStatus">Connected to Sheet API</span>
+      </div>
+      <button class="btn-sync" onclick="fetchLiveGoogleSheetData()">
+        <i class="fa-solid fa-rotate"></i> Sync Now
+      </button>
+    </div>
+  </header>
+
+  <!-- Live Status Bar -->
+  <div class="status-banner">
+    <span id="lastUpdatedText"><i class="fa-solid fa-clock-rotate-left"></i> Connecting to Google Sheet...</span>
+    <span id="rowCountBadge">Fetching records...</span>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-info">
+        <h3 id="statTotal">--</h3>
+        <span>Total Candidates</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fa-solid fa-code"></i></div>
+      <div class="stat-info">
+        <h3 id="statWebDev">--</h3>
+        <span>Web Developers</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="fa-solid fa-clock"></i></div>
+      <div class="stat-info">
+        <h3 id="statHighHours">--</h3>
+        <span>4+ Hours Available</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="fa-solid fa-graduation-cap"></i></div>
+      <div class="stat-info">
+        <h3 id="statGrads">--</h3>
+        <span>College / Grads</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="search-wrapper">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search candidate, skill, city, education...">
+    </div>
+
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="all"><i class="fa-solid fa-list"></i> All</button>
+      <button class="filter-btn" data-filter="web"><i class="fa-solid fa-code"></i> Web Devs</button>
+      <button class="filter-btn" data-filter="non-web"><i class="fa-solid fa-palette"></i> Non-Web / Others</button>
+      <button class="filter-btn" data-filter="high-time"><i class="fa-solid fa-bolt"></i> 4+ Hours</button>
+    </div>
+
+    <div class="view-toggle">
+      <button id="cardViewBtn" class="view-btn active" title="Card View"><i class="fa-solid fa-grip"></i></button>
+      <button id="tableViewBtn" class="view-btn" title="Table View"><i class="fa-solid fa-table-list"></i></button>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div id="loader" class="loader-box">
+    <div class="spinner"></div>
+    <p>Google Sheet API se live data load ho raha hai...</p>
+  </div>
+
+  <!-- Cards Container -->
+  <div id="cardsView" class="cards-grid" style="display: none;"></div>
+
+  <!-- Table Container -->
+  <div id="tableView" class="table-wrapper" style="display: none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Father's Name</th>
+          <th>Age</th>
+          <th>Education</th>
+          <th>Contact Number</th>
+          <th>Location</th>
+          <th>Expertise / Skills</th>
+          <th>Daily Time</th>
+          <th>Current Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Aapki Google Sheet ki ID
+  const SHEET_ID = '1DCBVxBYq4o8mqrDSXTm0rjbKGtoVq5IaeM7mCFq5JOw';
+
+  let rawCandidates = [];
+  let currentFilter = 'all';
+  let currentView = 'card';
+
+  // Google Visualization API JSONP Callback
+  window.onGoogleSheetResponse = function(response) {
+    document.getElementById('loader').style.display = 'none';
+
+    if (!response || !response.table || !response.table.rows) {
+      document.getElementById('lastUpdatedText').innerHTML = '⚠️ Data format sahi nahi mila.';
+      return;
+    }
+
+    const rows = response.table.rows;
+    rawCandidates = rows.map(r => {
+      const getVal = (idx) => (r.c && r.c[idx] && r.c[idx].v !== null) ? String(r.c[idx].v).trim() : '';
+      return {
+        name: getVal(0),
+        father: getVal(1) || '-',
+        age: getVal(2),
+        education: getVal(3),
+        phone: getVal(4),
+        location: getVal(5),
+        skills: getVal(6) || 'No skills listed yet',
+        hours: getVal(7),
+        status: getVal(8) || '-'
+      };
+    }).filter(c => c.name && c.name.toLowerCase() !== 'candidate name');
+
+    // Update Timestamps & Counters
+    const now = new Date();
+    document.getElementById('lastUpdatedText').innerHTML = `<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i> Live Data Synced: ${now.toLocaleTimeString()}`;
+    document.getElementById('rowCountBadge').innerText = `${rawCandidates.length} Candidates Loaded`;
+
+    calculateStats(rawCandidates);
+    render();
+    toggleView(currentView);
+  };
+
+  // Google Sheet API Call (JSONP bypasses browser CORS errors on file:// and localhost)
+  function fetchLiveGoogleSheetData() {
+    document.getElementById('syncStatus').innerText = 'Syncing...';
+    
+    // Purana script tag hatayein taake duplicate na bane
+    const existing = document.getElementById('gviz-script');
+    if (existing) existing.remove();
+
+    // Cache buster timestamp taake hamesha taaza data aaye
+    const timestamp = new Date().getTime();
+    const script = document.createElement('script');
+    script.id = 'gviz-script';
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onGoogleSheetResponse&_nocache=${timestamp}`;
+    
+    script.onerror = function() {
+      document.getElementById('loader').innerHTML = `
+        <div style="color: #ef4444; font-weight: 600;">Google Sheet se rabta nahi ho saka!</div>
+        <p style="font-size: 13px; margin-top: 6px;">Check karein ke Sheet mein "Anyone with the link can view" enable hai.</p>
+      `;
+      document.getElementById('syncStatus').innerText = 'Sync Failed';
+    };
+
+    document.body.appendChild(script);
+  }
+
+  function isWebDev(skills) {
+    const s = (skills || '').toLowerCase();
+    return s.includes('web') || s.includes('html') || s.includes('css') || 
+           s.includes('js') || s.includes('react') || s.includes('php') || 
+           s.includes('node') || s.includes('full stack') || s.includes('builder');
+  }
+
+  function calculateStats(data) {
+    document.getElementById('statTotal').innerText = data.length;
+    document.getElementById('statWebDev').innerText = data.filter(c => isWebDev(c.skills)).length;
+    document.getElementById('statHighHours').innerText = data.filter(c => {
+      const num = parseInt(c.hours);
+      return !isNaN(num) && num >= 4;
+    }).length;
+    document.getElementById('statGrads').innerText = data.filter(c => {
+      const e = (c.education || '').toLowerCase();
+      return e.includes('graduation') || e.includes('college') || e.includes('b.a') || e.includes('ics') || e.includes('diploma') || e.includes('2nd year');
+    }).length;
+  }
+
+  function getCleanPhone(phone) {
+    return (phone || '').replace(/[^0-9]/g, '');
+  }
+
+  function render() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    const filtered = rawCandidates.filter(c => {
+      if (currentFilter === 'web' && !isWebDev(c.skills)) return false;
+      if (currentFilter === 'non-web' && isWebDev(c.skills)) return false;
+      if (currentFilter === 'high-time') {
+        const h = parseInt(c.hours);
+        if (isNaN(h) || h < 4) return false;
+      }
+      
+      if (search) {
+        const str = `${c.name} ${c.father} ${c.skills} ${c.location} ${c.education} ${c.phone} ${c.status}`.toLowerCase();
+        if (!str.includes(search)) return false;
+      }
+      return true;
+    });
+
+    renderCards(filtered);
+    renderTable(filtered);
+  }
+
+  function renderCards(data) {
+    const container = document.getElementById('cardsView');
+    if (data.length === 0) {
+      container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;">Koi candidate match nahi hua.</div>`;
+      return;
+    }
+
+    container.innerHTML = data.map(c => {
+      const cleanPhone = getCleanPhone(c.phone);
+      const skillsArr = (c.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const initials = (c.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+      return `
+        <div class="candidate-card">
+          <div>
+            <div class="card-top">
+              <div class="avatar">${initials}</div>
+              <div class="candidate-title">
+                <h3>${c.name}</h3>
+                <div class="sub-meta">
+                  <span><i class="fa-solid fa-location-dot"></i> ${c.location}</span>
+                  <span><i class="fa-solid fa-cake-candles"></i> ${c.age}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="info-row">
+                <span class="info-label">Father's Name:</span>
+                <span class="info-value">${c.father}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Education:</span>
+                <span class="info-value">${c.education}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Daily Available:</span>
+                <span class="info-value"><span class="badge-work"><i class="fa-solid fa-clock"></i> ${c.hours}</span></span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Work Status:</span>
+                <span class="info-value">${c.status}</span>
+              </div>
+
+              <div class="skills-box">
+                <span class="skills-label">Skills / Expertise</span>
+                <div class="skill-chips">
+                  ${skillsArr.length && skillsArr[0] !== 'No skills listed yet'
+                    ? skillsArr.map(sk => `<span class="chip">${sk}</span>`).join('')
+                    : `<span class="chip none">No skills listed yet</span>`
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn-wa">
+              <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+            </a>
+            <a href="tel:${c.phone}" class="btn-call" title="Call">
+              <i class="fa-solid fa-phone"></i>
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 30px; color: #94a3b8;">Koi record nahi mila.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(c => {
+      const cleanPhone = getCleanPhone(c.phone);
+      return `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.father}</td>
+          <td>${c.age}</td>
+          <td>${c.education}</td>
+          <td><code>${c.phone}</code></td>
+          <td>${c.location}</td>
+          <td style="max-width: 250px;">${c.skills}</td>
+          <td><span class="badge-work">${c.hours}</span></td>
+          <td>${c.status}</td>
+          <td>
+            <a href="https://wa.me/${cleanPhone}" target="_blank" style="color: #22c55e; font-size: 16px; margin-right: 8px;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="tel:${c.phone}" style="color: #2563eb; font-size: 14px;" title="Call"><i class="fa-solid fa-phone"></i></a>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function toggleView(view) {
+    currentView = view;
+    if (view === 'card') {
+      document.getElementById('cardsView').style.display = 'grid';
+      document.getElementById('tableView').style.display = 'none';
+      document.getElementById('cardViewBtn').classList.add('active');
+      document.getElementById('tableViewBtn').classList.remove('active');
+    } else {
+      document.getElementById('cardsView').style.display = 'none';
+      document.getElementById('tableView').style.display = 'block';
+      document.getElementById('tableViewBtn').classList.add('active');
+      document.getElementById('cardViewBtn').classList.remove('active');
+    }
+  }
+
+  // Event Listeners
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  document.getElementById('cardViewBtn').addEventListener('click', () => toggleView('card'));
+  document.getElementById('tableViewBtn').addEventListener('click', () => toggleView('table'));
+
+  // Page load hote hi Google Sheets API se live data fetch hoga
+  fetchLiveGoogleSheetData();
+</script>
+
+</body>
+</html>
