@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Team - Live Google Sheets Portal</title>
-  <!-- Google Fonts & Font Awesome -->
+  <title>My Team - Live Candidate Management Portal</title>
+  <!-- Google Fonts & Font Awesome Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -18,6 +18,7 @@
       --border: #e2e8f0;
       --badge-bg: #eff6ff;
       --badge-text: #1d4ed8;
+      --success: #22c55e;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
     body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding-bottom: 60px; }
@@ -57,13 +58,21 @@
     }
     .btn-sync {
       background: #ffffff; color: var(--primary); border: none;
-      padding: 8px 14px; border-radius: 9px; font-weight: 600; font-size: 13px;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-      transition: all 0.2s;
+      padding: 9px 16px; border-radius: 9px; font-weight: 600; font-size: 13px;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .btn-sync:hover { background: #f1f5f9; transform: translateY(-1px); }
 
-    /* Stats Grid */
+    /* Status Banner */
+    .status-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 18px; background: #eff6ff; border-radius: 10px;
+      color: #1e40af; font-size: 13px; font-weight: 500; margin-bottom: 22px;
+      border: 1px solid #dbeafe;
+    }
+
+    /* Stats */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -92,7 +101,7 @@
     .stat-info h3 { font-size: 22px; font-weight: 700; color: var(--text-main); }
     .stat-info span { font-size: 13px; color: var(--text-muted); }
 
-    /* Controls Bar */
+    /* Controls */
     .controls {
       background: var(--card-bg);
       padding: 16px 20px;
@@ -130,14 +139,7 @@
     }
     .view-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-    /* Loading & Status Indicator */
-    .status-banner {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 16px; background: #eff6ff; border-radius: 8px;
-      color: #1e40af; font-size: 12px; font-weight: 500; margin-bottom: 20px;
-    }
-
-    /* Cards Grid */
+    /* Cards */
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -186,18 +188,24 @@
     .chip.none { background: #f1f5f9; color: #64748b; }
 
     .card-footer {
-      display: flex; gap: 10px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; border-top: 1px solid var(--border);
       padding-top: 15px; margin-top: auto;
     }
     .btn-wa {
-      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      background: #22c55e; color: #fff; text-decoration: none; padding: 10px;
-      border-radius: 9px; font-size: 13px; font-weight: 600; transition: background 0.2s;
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      background: #22c55e; color: #fff; text-decoration: none; padding: 9px;
+      border-radius: 8px; font-size: 13px; font-weight: 600; transition: background 0.2s;
     }
     .btn-wa:hover { background: #16a34a; }
+    .btn-edit {
+      background: #f1f5f9; color: var(--primary); border: 1px solid var(--border);
+      padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .btn-edit:hover { background: var(--primary); color: #fff; }
     .btn-call {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 42px; height: 40px; border-radius: 9px; border: 1px solid var(--border);
+      width: 40px; height: 38px; border-radius: 8px; border: 1px solid var(--border);
       color: var(--text-main); text-decoration: none; transition: background 0.2s;
     }
     .btn-call:hover { background: #f1f5f9; }
@@ -223,13 +231,54 @@
       padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;
     }
 
-    /* Loader Animation */
+    /* Modal Popup */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background: #fff; width: 100%; max-width: 520px; border-radius: 16px;
+      padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-main); }
+    .close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 5px; }
+    .form-group input {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .btn-save {
+      flex: 1; background: var(--primary); color: #fff; border: none; padding: 11px;
+      border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-save:hover { background: var(--primary-dark); }
+    .btn-cancel {
+      background: #f1f5f9; border: none; padding: 11px 20px; border-radius: 8px;
+      font-weight: 600; cursor: pointer; font-size: 13px; color: #64748b;
+    }
+
+    /* Loader */
     .loader-box { text-align: center; padding: 50px 20px; color: var(--text-muted); }
     .spinner {
       width: 36px; height: 36px; border: 3px solid #cbd5e1; border-top-color: var(--primary);
       border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed; bottom: 25px; right: 25px; background: #0f172a; color: #fff;
+      padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      display: none; align-items: center; gap: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      z-index: 2000;
+    }
   </style>
 </head>
 <body>
@@ -239,26 +288,26 @@
   <header>
     <div class="header-left">
       <h1>My Team Candidates Portal</h1>
-      <p>Live synchronized candidate directory connected directly to Google Sheets</p>
+      <p>Live 2-Way Sync: Update candidate data on website & instantly save to Google Sheet</p>
     </div>
     <div class="header-right">
       <div class="live-badge">
         <div class="pulse-dot"></div>
-        <span id="syncStatus">Connected to Sheet API</span>
+        <span id="syncBadge">Connected to Apps Script</span>
       </div>
-      <button class="btn-sync" onclick="fetchLiveGoogleSheetData()">
-        <i class="fa-solid fa-rotate"></i> Sync Now
+      <button class="btn-sync" onclick="loadLiveSheet()">
+        <i class="fa-solid fa-rotate"></i> Refresh Data
       </button>
     </div>
   </header>
 
-  <!-- Live Status Bar -->
+  <!-- Live Status Banner -->
   <div class="status-banner">
-    <span id="lastUpdatedText"><i class="fa-solid fa-clock-rotate-left"></i> Connecting to Google Sheet...</span>
-    <span id="rowCountBadge">Fetching records...</span>
+    <span id="statusText"><i class="fa-solid fa-clock-rotate-left"></i> Connecting to Google Sheet API...</span>
+    <span id="counterBadge">Loading...</span>
   </div>
 
-  <!-- Statistics -->
+  <!-- Statistics Overview -->
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
@@ -294,7 +343,7 @@
   <div class="controls">
     <div class="search-wrapper">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" id="searchInput" class="search-input" placeholder="Search candidate, skill, city, education...">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search candidate by name, skill, city, education...">
     </div>
 
     <div class="filter-group">
@@ -313,13 +362,13 @@
   <!-- Loader -->
   <div id="loader" class="loader-box">
     <div class="spinner"></div>
-    <p>Google Sheet API se live data load ho raha hai...</p>
+    <p>Google Sheet se taaza data load ho raha hai...</p>
   </div>
 
-  <!-- Cards Container -->
+  <!-- Cards View -->
   <div id="cardsView" class="cards-grid" style="display: none;"></div>
 
-  <!-- Table Container -->
+  <!-- Table View -->
   <div id="tableView" class="table-wrapper" style="display: none;">
     <table>
       <thead>
@@ -333,7 +382,7 @@
           <th>Expertise / Skills</th>
           <th>Daily Time</th>
           <th>Current Status</th>
-          <th>Action</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -341,20 +390,82 @@
   </div>
 </div>
 
+<!-- Edit Candidate Modal -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle">Edit Candidate Details</h2>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+    <form id="editForm" onsubmit="submitCandidateUpdate(event)">
+      <input type="hidden" id="editCandidateName">
+      
+      <div class="form-group">
+        <label>Candidate Name (Identifier)</label>
+        <input type="text" id="displayCandidateName" disabled style="background:#f1f5f9; color:#64748b;">
+      </div>
+
+      <div class="form-group">
+        <label>Contact Number (e.g. +923001234567)</label>
+        <input type="text" id="editPhone" required>
+      </div>
+
+      <div class="form-group">
+        <label>Education</label>
+        <input type="text" id="editEducation">
+      </div>
+
+      <div class="form-group">
+        <label>Location / City</label>
+        <input type="text" id="editLocation">
+      </div>
+
+      <div class="form-group">
+        <label>Expertise / Skills (comma-separated)</label>
+        <input type="text" id="editSkills">
+      </div>
+
+      <div class="form-group">
+        <label>Daily Work Time (e.g. 4 Hours)</label>
+        <input type="text" id="editHours">
+      </div>
+
+      <div class="form-group">
+        <label>Current Work Status</label>
+        <input type="text" id="editStatus">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button type="submit" id="saveSubmitBtn" class="btn-save">
+          <i class="fa-solid fa-floppy-disk"></i> Update Google Sheet
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast">
+  <i class="fa-solid fa-circle-check" style="color: #4ade80;"></i>
+  <span id="toastMsg">Data successfully updated!</span>
+</div>
+
 <script>
-  // Aapki Google Sheet ki ID
+  // Configuration
   const SHEET_ID = '1DCBVxBYq4o8mqrDSXTm0rjbKGtoVq5IaeM7mCFq5JOw';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2rLIWrL7qxqj_HCjtyTC0_AZNDWzG5pmA3M7vfN34JzdEMyYVXL864DZTJgryasYV-Q/exec';
 
   let rawCandidates = [];
   let currentFilter = 'all';
   let currentView = 'card';
 
-  // Google Visualization API JSONP Callback
-  window.onGoogleSheetResponse = function(response) {
+  // Google Sheet JSONP Callback
+  window.onGoogleSheetDataLoaded = function(response) {
     document.getElementById('loader').style.display = 'none';
 
     if (!response || !response.table || !response.table.rows) {
-      document.getElementById('lastUpdatedText').innerHTML = '⚠️ Data format sahi nahi mila.';
+      document.getElementById('statusText').innerHTML = '⚠️ Data load karne mein masla hua.';
       return;
     }
 
@@ -374,36 +485,28 @@
       };
     }).filter(c => c.name && c.name.toLowerCase() !== 'candidate name');
 
-    // Update Timestamps & Counters
     const now = new Date();
-    document.getElementById('lastUpdatedText').innerHTML = `<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i> Live Data Synced: ${now.toLocaleTimeString()}`;
-    document.getElementById('rowCountBadge').innerText = `${rawCandidates.length} Candidates Loaded`;
+    document.getElementById('statusText').innerHTML = `<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i> Live Data Synced: ${now.toLocaleTimeString()}`;
+    document.getElementById('counterBadge').innerText = `${rawCandidates.length} Candidates Loaded`;
 
     calculateStats(rawCandidates);
     render();
     toggleView(currentView);
   };
 
-  // Google Sheet API Call (JSONP bypasses browser CORS errors on file:// and localhost)
-  function fetchLiveGoogleSheetData() {
-    document.getElementById('syncStatus').innerText = 'Syncing...';
-    
-    // Purana script tag hatayein taake duplicate na bane
-    const existing = document.getElementById('gviz-script');
-    if (existing) existing.remove();
+  function loadLiveSheet() {
+    document.getElementById('syncBadge').innerText = 'Syncing...';
+    const oldScript = document.getElementById('gviz-sync-script');
+    if (oldScript) oldScript.remove();
 
-    // Cache buster timestamp taake hamesha taaza data aaye
     const timestamp = new Date().getTime();
     const script = document.createElement('script');
-    script.id = 'gviz-script';
-    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onGoogleSheetResponse&_nocache=${timestamp}`;
+    script.id = 'gviz-sync-script';
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onGoogleSheetDataLoaded&_nocache=${timestamp}`;
     
     script.onerror = function() {
-      document.getElementById('loader').innerHTML = `
-        <div style="color: #ef4444; font-weight: 600;">Google Sheet se rabta nahi ho saka!</div>
-        <p style="font-size: 13px; margin-top: 6px;">Check karein ke Sheet mein "Anyone with the link can view" enable hai.</p>
-      `;
-      document.getElementById('syncStatus').innerText = 'Sync Failed';
+      document.getElementById('statusText').innerHTML = '⚠️ Rabta munqata hua. Dobara koshish karein.';
+      document.getElementById('syncBadge').innerText = 'Offline';
     };
 
     document.body.appendChild(script);
@@ -462,7 +565,7 @@
       return;
     }
 
-    container.innerHTML = data.map(c => {
+    container.innerHTML = data.map((c, index) => {
       const cleanPhone = getCleanPhone(c.phone);
       const skillsArr = (c.skills || '').split(',').map(s => s.trim()).filter(Boolean);
       const initials = (c.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -513,8 +616,11 @@
 
           <div class="card-footer">
             <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn-wa">
-              <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
+            <button class="btn-edit" onclick="openEditModalByName('${escapeHtml(c.name)}')">
+              <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
             <a href="tel:${c.phone}" class="btn-call" title="Call">
               <i class="fa-solid fa-phone"></i>
             </a>
@@ -545,8 +651,10 @@
           <td><span class="badge-work">${c.hours}</span></td>
           <td>${c.status}</td>
           <td>
-            <a href="https://wa.me/${cleanPhone}" target="_blank" style="color: #22c55e; font-size: 16px; margin-right: 8px;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-            <a href="tel:${c.phone}" style="color: #2563eb; font-size: 14px;" title="Call"><i class="fa-solid fa-phone"></i></a>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <a href="https://wa.me/${cleanPhone}" target="_blank" style="color: #22c55e; font-size: 16px;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+              <button onclick="openEditModalByName('${escapeHtml(c.name)}')" style="background: none; border: none; color: #2563eb; cursor: pointer; font-size: 15px;" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+            </div>
           </td>
         </tr>
       `;
@@ -568,7 +676,77 @@
     }
   }
 
-  // Event Listeners
+  function openEditModalByName(name) {
+    const candidate = rawCandidates.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!candidate) return;
+
+    document.getElementById('editCandidateName').value = candidate.name;
+    document.getElementById('displayCandidateName').value = candidate.name;
+    document.getElementById('modalTitle').innerText = `Edit: ${candidate.name}`;
+    document.getElementById('editPhone').value = candidate.phone;
+    document.getElementById('editEducation').value = candidate.education;
+    document.getElementById('editLocation').value = candidate.location;
+    document.getElementById('editSkills').value = candidate.skills;
+    document.getElementById('editHours').value = candidate.hours;
+    document.getElementById('editStatus').value = candidate.status;
+
+    document.getElementById('editModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  async function submitCandidateUpdate(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveSubmitBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving to Sheet...';
+    btn.disabled = true;
+
+    const payload = {
+      name: document.getElementById('editCandidateName').value,
+      phone: document.getElementById('editPhone').value,
+      education: document.getElementById('editEducation').value,
+      location: document.getElementById('editLocation').value,
+      skills: document.getElementById('editSkills').value,
+      hours: document.getElementById('editHours').value,
+      status: document.getElementById('editStatus').value
+    };
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      showToast(`Shabash! ${payload.name} ka data Google Sheet mein update ho gaya!`);
+      closeModal();
+      
+      // Sheet se taaza data re-fetch karein
+      setTimeout(loadLiveSheet, 1200);
+    } catch (err) {
+      alert('Error updating Google Sheet: ' + err.message);
+      console.error(err);
+    } finally {
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update Google Sheet';
+      btn.disabled = false;
+    }
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMsg').innerText = msg;
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+
+  function escapeHtml(str) {
+    return (str || '').replace(/'/g, "\\'");
+  }
+
+  // Setup Event Listeners
   document.getElementById('searchInput').addEventListener('input', render);
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -583,8 +761,8 @@
   document.getElementById('cardViewBtn').addEventListener('click', () => toggleView('card'));
   document.getElementById('tableViewBtn').addEventListener('click', () => toggleView('table'));
 
-  // Page load hote hi Google Sheets API se live data fetch hoga
-  fetchLiveGoogleSheetData();
+  // Initial Load
+  loadLiveSheet();
 </script>
 
 </body>
